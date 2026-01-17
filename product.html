@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تفاصيل المنتج</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Cairo, sans-serif;
+      background: #f9f7f4;
+      padding: 20px;
+    }
+
+    .product-details {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+    }
+
+    .slider img {
+      width: 100%;
+      display: none;
+      border-radius: 15px;
+    }
+
+    .slider img.active {
+      display: block;
+    }
+
+    button {
+      background: #8b263e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="product-details">
+  <div class="slider" id="slider"></div>
+
+  <h1 id="name"></h1>
+  <h3 id="sub"></h3>
+  <p id="desc"></p>
+  <p id="price"></p>
+
+  <button onclick="addToCart()">🛒 إقتنِ</button>
+</div>
+
+<script>
+const products = {
+  table1:{
+    name:"Mother of pearl",
+    sub:"Coffee table",
+    desc:"طاولة خشبية مزينة بقشر اللؤلؤ.",
+    price:18,
+    images:["images/mop1.jpg","images/mop2.jpg","images/mop3.jpg","images/mop4.jpg"]
+  },
+  flowered:{
+    name:"Flowered surface",
+    sub:"Coffee table",
+    desc:"طاولة بسطح فسيفساء.",
+    price:20,
+    images:["images/fl1.jpg","images/fl2.jpg","images/fl3.jpg","images/fl4.jpg"]
+  },
+  tray:{
+    name:"Tray",
+    sub:"Mother of pearl",
+    desc:"صينية خشبية.",
+    price:5.5,
+    images:["images/tr3.jpg","images/tr2.jpg","images/tr1.jpg"]
+  },
+  toy:{
+    name:"Keyboard toy medal",
+    sub:"Relieve stress",
+    desc:"لعبة ميدالية.",
+    price:2,
+    images:["images/ky.jfif"]
+  },
+  coaster:{
+    name:"Cup coaster",
+    sub:"Tile surface",
+    desc:"كوستر خشبي.",
+    price:5.5,
+    images:["images/soon.jfif"]
+  }
+};
+
+/* جلب id من الرابط */
+const id = new URLSearchParams(window.location.search).get("id");
+
+/* حماية */
+if(!products[id]){
+  document.body.innerHTML = "<h2 style='text-align:center'>المنتج غير موجود</h2>";
+  throw new Error("Product not found");
+}
+
+const p = products[id];
+
+/* تعبئة البيانات */
+document.getElementById("name").innerText = p.name;
+document.getElementById("sub").innerText = p.sub;
+document.getElementById("desc").innerText = p.desc;
+document.getElementById("price").innerText = "السعر: " + p.price + " ر.ع";
+
+/* السلايدر */
+const slider = document.getElementById("slider");
+let current = 0;
+
+p.images.forEach((img,i)=>{
+  let el = document.createElement("img");
+  el.src = img;
+  if(i === 0) el.classList.add("active");
+  slider.appendChild(el);
+});
+
+const images = slider.querySelectorAll("img");
+
+function showImage(index){
+  images.forEach(img => img.classList.remove("active"));
+  images[index].classList.add("active");
+}
+
+function nextImage(){
+  current = (current + 1) % images.length;
+  showImage(current);
+}
+
+function prevImage(){
+  current = (current - 1 + images.length) % images.length;
+  showImage(current);
+}
+
+/* إضافة أزرار */
+if(images.length > 1){
+  const nextBtn = document.createElement("button");
+  nextBtn.innerText = "▶";
+  nextBtn.onclick = nextImage;
+
+  const prevBtn = document.createElement("button");
+  prevBtn.innerText = "◀";
+  prevBtn.onclick = prevImage;
+
+  slider.after(nextBtn);
+  slider.before(prevBtn);
+}
+
+/* إضافة للسلة */
+function addToCart(){
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  cart.push({
+    name: p.name,
+    price: p.price,
+    image: p.images[0]
+  });
+  localStorage.setItem("cart", JSON.stringify(cart));
+  alert("تمت الإضافة للسلة");
+}
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>حطبه - متجر المنتجات الخشبية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+/* ================= شاشة الترحيب ================= */
+#welcome{
+  position:fixed;
+  inset:0;
+  background:#f9f7f4;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  animation:fadeOut 1s ease 4s forwards;
+}
+
+.welcome-box{
+  text-align:center;
+  z-index:2;
+}
+
+.welcome-box h1{
+  color:#8b263e;
+  font-size:32px;
+  margin-bottom:10px;
+}
+
+.welcome-box p{
+  color:#3e2f1c;
+  font-size:16px;
+}
+
+.stars::before,
+.stars::after{
+  content:"✨ ✦ ✧ ✨ ✦ ✧ ✨";
+  position:absolute;
+  font-size:24px;
+  animation:floatStars 6s linear infinite;
+  opacity:0.6;
+}
+
+.stars::after{
+  animation-delay:3s;
+  top:70%;
+}
+
+@keyframes floatStars{
+  from{transform:translateX(-100%)}
+  to{transform:translateX(100%)}
+}
+
+@keyframes fadeOut{
+  to{
+    opacity:0;
+    visibility:hidden;
+  }
+}
+
+/* ================= الموقع ================= */
+body{
+  font-family:"Cairo",sans-serif;
+  margin:0;
+  background:#f9f7f4;
+  color:#3e2f1c;
+}
+
+header img{
+  width:100%;
+  height:200px;
+  object-fit:cover;
+}
+
+.main-header{
+  position:relative;
+}
+
+.cart-icon{
+  position:absolute;
+  top:20px;
+  left:20px;
+  background:white;
+  border-radius:50%;
+  width:55px;
+  height:55px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  text-decoration:none;
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  color:#3e2f1c;
+}
+
+.cart-count{
+  position:absolute;
+  top:5px;
+  right:5px;
+  background:#8b263e;
+  color:white;
+  font-size:12px;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.products{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:1.5rem;
+  padding:2rem;
+}
+
+.product{
+  background:white;
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  text-align:center;
+  padding:1rem;
+  transition:.2s;
+}
+
+.product:hover{transform:scale(1.03)}
+
+.product img{
+  width:100%;
+  height:200px;
+  object-fit:cover;
+  border-radius:8px;
+}
+
+.add-to-cart{
+  background:#8b263e;
+  color:white;
+  border:none;
+  padding:10px 20px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+footer{
+  background:#8b263e;
+  color:white;
+  text-align:center;
+  padding:1rem;
+}
+
+.social-buttons{
+  position:fixed;
+  bottom:25px;
+  right:20px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  z-index:999;
+}
+
+.social-buttons a{
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:white;
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);
+}
+
+.social-buttons img{width:60%}
+  </style>
+</head>
+
+<body>
+
+<!-- شاشة الترحيب -->
+<div id="welcome">
+  <div class="stars"></div>
+  <div class="welcome-box">
+    <h1>أهلاً بك في حطبه</h1>
+    <p>منتجات خشبية مصنوعة بحب 🌿</p>
+  </div>
+</div>
+
+<header class="main-header">
+  <img src="images/main logo.png" alt="صورة خشب">
+  <a href="cart.html" class="cart-icon">
+    🛒
+    <span class="cart-count" id="cartCount">0</span>
+  </a>
+</header>
+
+<section class="products">
+
+  <div class="product">
+    <a href="product.html?id=table1">
+      <img src="images/mop1.jpg">
+      <h3>Mother of Pearl</h3>
+    </a>
+    <p>Coffee table</p>
+    <button class="add-to-cart"
+      onclick="addToCart('Mother of Pearl',18,'images/mop1.jpg')">إقتنِ</button>
+  </div>
+
+  <div class="product">
+    <a href="product.html?id=flowered">
+      <img src="images/fl1.jpg">
+      <h3>Flowered surface</h3>
+    </a>
+    <p>Coffee table</p>
+    <button class="add-to-cart"
+      onclick="addToCart('Flowered surface',20,'images/fl1.jpg')">إقتنِ</button>
+  </div>
+
+  <div class="product">
+    <a href="product.html?id=tray">
+      <img src="images/tr1.jpg">
+      <h3>Tray</h3>
+    </a>
+    <p>Mother of pearl</p>
+    <button class="add-to-cart"
+      onclick="addToCart('Tray',5.5,'images/tr1.jpg')">إقتنِ</button>
+  </div>
+
+  <div class="product">
+    <a href="product.html?id=toy">
+      <img src="images/ky.jfif">
+      <h3>Keyboard toy medal</h3>
+    </a>
+    <p>Relieve stress</p>
+    <button class="add-to-cart"
+      onclick="addToCart('Keyboard toy medal',2,'images/ky.jfif')">إقتنِ</button>
+  </div>
+
+  <div class="product">
+    <a href="product.html?id=coaster">
+      <img src="images/soon.jfif">
+      <h3>Cup coaster</h3>
+    </a>
+    <p>Tile surface</p>
+    <button class="add-to-cart"
+      onclick="addToCart('Cup coaster',5.5,'images/soon.jfif')">إقتنِ</button>
+  </div>
+
+</section>
+
+<div class="social-buttons">
+  <a href="https://wa.me/96877159550" target="_blank">
+    <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png">
+  </a>
+  <a href="https://instagram.com/hatbahh" target="_blank">
+    <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png">
+  </a>
+</div>
+
+<footer>
+  © 2025 جميع الحقوق محفوظة لمتجر <strong>حطبه</strong>
+</footer>
+
+<script>
+function addToCart(name,price,image){
+  let cart=JSON.parse(localStorage.getItem("cart"))||[];
+  cart.push({name,price,image});
+  localStorage.setItem("cart",JSON.stringify(cart));
+  document.getElementById("cartCount").innerText=cart.length;
+}
+
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
+document.getElementById("cartCount").innerText=cart.length;
+
+/* تظهر شاشة الترحيب مرة واحدة */
+if(localStorage.getItem("visited")){
+  document.getElementById("welcome");
+}else{
+  localStorage.setItem("visited","true");
+}
+</script>
+
+</body>
+</html>

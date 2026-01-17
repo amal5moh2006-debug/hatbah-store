@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>سلة الطلب</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  font-family:Cairo;
+  background:#f9f7f4;
+  padding:20px
+}
+
+.container{
+  max-width:500px;
+  margin:auto;
+  background:white;
+  padding:20px;
+  border-radius:12px
+}
+
+.item{
+  display:flex;
+  gap:10px;
+  margin-bottom:12px;
+  align-items:center;
+  border-bottom:1px solid #eee;
+  padding-bottom:10px
+}
+
+.item img{
+  width:60px;
+  height:60px;
+  border-radius:8px;
+  object-fit:cover
+}
+
+.item-info{
+  flex:1
+}
+
+.remove{
+  background:#8b263e;
+  color:white;
+  border:none;
+  border-radius:50%;
+  width:28px;
+  height:28px;
+  cursor:pointer;
+  font-size:14px
+}
+
+button.main{
+  background:#8b263e;
+  color:white;
+  border:none;
+  padding:10px;
+  border-radius:8px;
+  cursor:pointer;
+  width:100%;
+  margin-top:15px
+}
+
+#total{
+  font-weight:bold;
+  text-align:center;
+  margin-top:15px
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2 style="text-align:center">سلة الطلب</h2>
+
+  <div id="items"></div>
+
+  <p id="total"></p>
+<label style="font-weight:bold;margin-top:15px;display:block">
+  تعليق أو طلب خاص:
+</label>
+<textarea id="note"
+  placeholder="مثال: لون مختلف، تغليف هدية، موعد توصيل..."
+  style="
+    width:100%;
+    padding:8px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    margin-top:5px;
+    resize:vertical;
+  ">
+</textarea>
+
+<label style="font-weight:bold;margin-top:15px;display:block">
+  إرفاق صورة (اختياري):
+</label>
+<input type="file" id="image"
+  accept="image/*"
+  style="margin-top:5px">
+
+  <button class="main" onclick="send()">إرسال عبر واتساب</button>
+</div>
+
+<script>
+function renderCart(){
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let div = document.getElementById("items");
+  let total = 0;
+
+  div.innerHTML = "";
+
+  if(cart.length === 0){
+    div.innerHTML = "<p style='text-align:center'>السلة فارغة</p>";
+    document.getElementById("total").innerText = "";
+    return;
+  }
+
+  cart.forEach((i,index)=>{
+    total += i.price;
+    div.innerHTML += `
+      <div class="item">
+        <img src="${i.image}">
+        <div class="item-info">
+          <strong>${i.name}</strong><br>
+          ${i.price} ر.ع
+        </div>
+        <button class="remove" onclick="removeItem(${index})">✖</button>
+      </div>
+    `;
+  });
+
+  document.getElementById("total").innerText =
+    "الإجمالي: " + total + " ر.ع";
+}
+
+function removeItem(index){
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  cart.splice(index,1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
+
+function send(){
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  if(cart.length === 0){
+    alert("السلة فارغة");
+    return;
+  }
+
+  let note = document.getElementById("note").value;
+  let imageAttached = document.getElementById("image").files.length > 0;
+
+  let total = 0;
+  let msg = "طلب جديد:%0A";
+
+  cart.forEach(i=>{
+    total += i.price;
+    msg += i.name + " - " + i.price + " ر.ع%0A";
+  });
+
+  msg += "%0Aالإجمالي: " + total + " ر.ع";
+
+  if(note.trim() !== ""){
+    msg += "%0A%0Aملاحظة العميل:%0A" + encodeURIComponent(note);
+  }
+
+  if(imageAttached){
+    msg += "%0A%0A📎 يوجد صورة مرفقة مع الطلب";
+  }
+
+  // فتح واتساب
+  window.open("https://wa.me/96877159550?text=" + msg);
+
+  // رسالة نجاح + شكر
+  setTimeout(()=>{
+    alert(
+      "✅ تم إرسال طلبك بنجاح\n\n" +
+      "نشكرك على ثقتك بنا 🌿\n" +
+      "سيتم التواصل معك قريبًا"
+    );
+
+    // تفريغ السلة
+    localStorage.removeItem("cart");
+
+    // الرجوع للصفحة الرئيسية
+    window.location.href = "index.html";
+  }, 500);
+}
+
+renderCart();
+</script>
+
+
+</body>
+</html>
