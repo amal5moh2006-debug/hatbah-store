@@ -63,7 +63,6 @@ button:hover{
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
 <script>
 // ===== إعداد Firebase =====
@@ -78,9 +77,8 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const storage = firebase.storage();
 
-// ===== معاينة الصورة قبل الإرسال =====
+// ===== معاينة الصورة محليًا فقط =====
 document.getElementById("img").addEventListener("change", function(e){
   const file = e.target.files[0];
   if(file){
@@ -99,27 +97,17 @@ async function send(){
   let name = document.getElementById("name").value.trim();
   let phone = document.getElementById("phone").value.trim();
   let idea = document.getElementById("idea").value.trim();
-  const file = document.getElementById("img").files[0];
 
   if(name=="" || phone=="" || idea==""){
     alert("يرجى تعبئة جميع الحقول الأساسية");
     return;
   }
 
-  let imageURL = "";
-  if(file){
-    // رفع الصورة إلى Firebase Storage
-    const ref = storage.ref("orders/"+Date.now()+"_"+file.name);
-    const snap = await ref.put(file);
-    imageURL = await snap.ref.getDownloadURL();
-  }
-
-  // حفظ البيانات في Firestore
+  // حفظ البيانات في Firestore فقط (بدون رفع الصور)
   await db.collection("orders").add({
     name,
     phone,
     idea,
-    image: imageURL,
     created: new Date()
   });
 
