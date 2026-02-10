@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>خِدمة نفِّذ| حطبه</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  font-family:Cairo;
+  background:#f9f7f4;
+  padding:20px;
+}
+.box{
+  max-width:600px;
+  margin:auto;
+  background:white;
+  padding:25px;
+  border-radius:15px;
+  box-shadow:0 4px 15px rgba(0,0,0,.1);
+}
+h2{
+  text-align:center;
+  color:#8b263e;
+}
+input,textarea,button{
+  width:100%;
+  margin-top:10px;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:14px
+}
+button{
+  background:#8b263e;
+  color:white;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+  transition:.2s;
+}
+button:hover{
+  transform:scale(1.02);
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>🎨 صمّمها بطريقتك</h2>
+  <p style="text-align:center">
+    عندك فكرة أو تصميم أعجبك؟
+أرسلها لنا، واحنا ننفذها لك بالخشب ونضيف لها تصميم فسيفساء على ذوقك وجوّك.
+  </p>
+
+  <input id="name" placeholder="اسمك">
+  <input id="phone" placeholder="رقم التواصل">
+  <textarea id="idea" rows="4"
+   placeholder="اشرح لنا فكرتك أو ماذا تريد تنفيذه..."></textarea>
+  <input type="file" id="img" accept="image/*">
+
+  <button onclick="send()">إرسال الطلب</button>
+</div>
+
+<script>
+function send(){
+  let name = document.getElementById("name").value.trim();
+  let phone = document.getElementById("phone").value.trim();
+  let idea = document.getElementById("idea").value.trim();
+  let imageAttached = document.getElementById("img").files.length > 0;
+
+  if(name=="" || phone=="" || idea==""){
+    alert("يرجى تعبئة جميع الحقول الأساسية");
+    return;
+  }
+
+  let msg =
+    "طلب تنفيذ تفصيل:%0A%0A" +
+    "الاسم: " + encodeURIComponent(name) + "%0A" +
+    "رقم التواصل: " + encodeURIComponent(phone) + "%0A%0A" +
+    "التفاصيل:%0A" + encodeURIComponent(idea);
+
+  if(imageAttached){
+    msg += "%0A%0A📎 يوجد صورة مرفقة مع الطلب";
+  }
+
+  // فتح واتساب
+  window.open("https://wa.me/96877159550?text=" + msg);
+}
+</script>
+
+</body>
+</html>
