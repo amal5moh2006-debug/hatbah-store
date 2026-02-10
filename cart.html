@@ -100,8 +100,26 @@ button.main{
   accept="image/*"
   style="margin-top:5px">
 
-  <button class="main" onclick="send()">إرسال عبر واتساب</button>
+  <button class="main" onclick="sendToFirestore()">إرسال الطلب</button>
 </div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+<script>
+// ===== Firebase =====
+const firebaseConfig = {
+  apiKey: "AIzaSyAKrYrlNkIJioq3Eh5G6A4ZzHpgTZW1wn4",
+  authDomain: "hatbah-orders.firebaseapp.com",
+  projectId: "hatbah-orders",
+  storageBucket: "hatbah-orders.appspot.com",
+  messagingSenderId: "660907871957",
+  appId: "1:660907871957:web:ef500ea318d495c9f11c5c"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
 
 <script>
 function renderCart(){
@@ -142,56 +160,46 @@ function removeItem(index){
   renderCart();
 }
 
-function send(){
+// ===== إرسال الطلب إلى Firestore =====
+async function sendToFirestore(){
   let cart = JSON.parse(localStorage.getItem("cart")) || [];
   if(cart.length === 0){
     alert("السلة فارغة");
     return;
   }
 
-  let note = document.getElementById("note").value;
-  let imageAttached = document.getElementById("image").files.length > 0;
+  let note = document.getElementById("note").value.trim();
 
-  let total = 0;
-  let msg = "طلب جديد:%0A";
+  let name = prompt("ادخل اسمك");
+  let phone = prompt("ادخل رقم التواصل");
 
-  cart.forEach(i=>{
-    total += i.price;
-    msg += i.name + " - " + i.price + " ر.ع%0A";
+  if(!name || !phone){
+    alert("يرجى إدخال الاسم ورقم الهاتف");
+    return;
+  }
+
+  // حفظ الطلب في Firestore
+  await db.collection("orders").add({
+    name: name,
+    phone: phone,
+    note: note,
+    products: cart,
+    created: new Date()
   });
 
-  msg += "%0Aالإجمالي: " + total + " ر.ع";
+  alert("✅ تم إرسال طلبك بنجاح");
 
-  if(note.trim() !== ""){
-    msg += "%0A%0Aملاحظة العميل:%0A" + encodeURIComponent(note);
-  }
-
-  if(imageAttached){
-    msg += "%0A%0A📎 يوجد صورة مرفقة مع الطلب";
-  }
-
-  // فتح واتساب
-  window.open("https://wa.me/96877159550?text=" + msg);
-
-  // رسالة نجاح + شكر
-  setTimeout(()=>{
-    alert(
-      "✅ تم إرسال طلبك بنجاح\n\n" +
-      "نشكرك على ثقتك بنا 🌿\n" +
-      "سيتم التواصل معك قريبًا"
-    );
-
-    // تفريغ السلة
-    localStorage.removeItem("cart");
-
-    // الرجوع للصفحة الرئيسية
-    window.location.href = "index.html";
-  }, 500);
+  // تفريغ السلة
+  localStorage.removeItem("cart");
+  renderCart();
 }
 
 renderCart();
 </script>
 
+</body>
+</html>
 
 </body>
 </html>
+
