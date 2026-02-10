@@ -57,6 +57,8 @@ button:hover{
   <textarea id="idea" rows="4"
    placeholder="اشرح فكرتك"></textarea>
   <input type="file" id="img" accept="image/*">
+  <img id="preview" alt="معاينة الصورة" style="width:100%;margin-top:15px;border-radius:8px;display:none;">
+
 
   <button onclick="send()">إرسال الطلب</button>
 </div>
@@ -67,6 +69,20 @@ function send(){
   let phone = document.getElementById("phone").value.trim();
   let idea = document.getElementById("idea").value.trim();
   let imageAttached = document.getElementById("img").files.length > 0;
+  // معاينة الصورة قبل الإرسال
+document.getElementById("img").addEventListener("change", function(e){
+  const file = e.target.files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(event){
+      const preview = document.getElementById("preview");
+      preview.src = event.target.result;
+      preview.style.display = "block";
+    }
+    reader.readAsDataURL(file);
+  }
+});
+
 
   if(name=="" || phone=="" || idea==""){
     alert("يرجى تعبئة جميع الحقول الأساسية");
