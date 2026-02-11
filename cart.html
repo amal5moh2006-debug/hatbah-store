@@ -59,13 +59,44 @@ button.main{
   border-radius:8px;
   cursor:pointer;
   width:100%;
-  margin-top:15px
+  margin-top:15px;
+  font-size:16px;
+}
+
+button.main:disabled{
+  background:#ccc;
+  cursor:not-allowed;
 }
 
 #total{
   font-weight:bold;
   text-align:center;
   margin-top:15px
+}
+
+.loading{
+  display:none;
+  text-align:center;
+  color:#8b263e;
+  margin-top:10px;
+}
+
+.error{
+  background:#fee;
+  color:#c00;
+  padding:10px;
+  border-radius:8px;
+  margin-top:10px;
+  display:none;
+}
+
+.success{
+  background:#efe;
+  color:#060;
+  padding:10px;
+  border-radius:8px;
+  margin-top:10px;
+  display:none;
 }
 </style>
 </head>
@@ -78,6 +109,35 @@ button.main{
   <div id="items"></div>
 
   <p id="total"></p>
+
+<label style="font-weight:bold;margin-top:15px;display:block">
+  الاسم:
+</label>
+<input type="text" id="name"
+  placeholder="أدخل اسمك"
+  style="
+    width:100%;
+    padding:8px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    margin-top:5px;
+    box-sizing:border-box;
+  ">
+
+<label style="font-weight:bold;margin-top:15px;display:block">
+  رقم التواصل:
+</label>
+<input type="tel" id="phone"
+  placeholder="أدخل رقم هاتفك"
+  style="
+    width:100%;
+    padding:8px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    margin-top:5px;
+    box-sizing:border-box;
+  ">
+
 <label style="font-weight:bold;margin-top:15px;display:block">
   تعليق أو طلب خاص:
 </label>
@@ -90,6 +150,7 @@ button.main{
     border:1px solid #ccc;
     margin-top:5px;
     resize:vertical;
+    box-sizing:border-box;
   ">
 </textarea>
 
@@ -100,12 +161,17 @@ button.main{
   accept="image/*"
   style="margin-top:5px">
 
-  <button class="main" onclick="sendToFirestore()">إرسال الطلب</button>
+<div class="error" id="error"></div>
+<div class="success" id="success"></div>
+<div class="loading" id="loading">جاري إرسال الطلب... ⏳</div>
+
+<button class="main" id="submitBtn" onclick="sendToFirestore()">إرسال الطلب</button>
 </div>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
 <script>
 // ===== Firebase =====
@@ -117,8 +183,12 @@ const firebaseConfig = {
   messagingSenderId: "660907871957",
   appId: "1:660907871957:web:ef500ea318d495c9f11c5c"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const storage = firebase.storage();
+
+console.log("✅ Firebase initialized successfully");
 </script>
 
 <script>
@@ -160,38 +230,102 @@ function removeItem(index){
   renderCart();
 }
 
+function showError(message){
+  const errorDiv = document.getElementById("error");
+  errorDiv.innerText = message;
+  errorDiv.style.display = "block";
+  setTimeout(() => {
+    errorDiv.style.display = "none";
+  }, 5000);
+}
+
+function showSuccess(message){
+  const successDiv = document.getElementById("success");
+  successDiv.innerText = message;
+  successDiv.style.display = "block";
+}
+
 // ===== إرسال الطلب إلى Firestore =====
 async function sendToFirestore(){
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  if(cart.length === 0){
-    alert("السلة فارغة");
-    return;
+  try{
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    if(cart.length === 0){
+      showError("❌ السلة فارغة");
+      return;
+    }
+
+    let name = document.getElementById("name").value.trim();
+    let phone = document.getElementById("phone").value.trim();
+    let note = document.getElementById("note").value.trim();
+    let imageFile = document.getElementById("image").files[0];
+
+    if(!name){
+      showError("❌ يرجى إدخال الاسم");
+      return;
+    }
+
+    if(!phone){
+      showError("❌ يرجى إدخال رقم التواصل");
+      return;
+    }
+
+    // تفعيل حالة التحميل
+    const submitBtn = document.getElementById("submitBtn");
+    const loading = document.getElementById("loading");
+    submitBtn.disabled = true;
+    loading.style.display = "block";
+
+    let imageUrl = null;
+
+    // رفع الصورة إلى Storage إذا كانت موجودة
+    if(imageFile){
+      try{
+        const storageRef = storage.ref("orders/" + Date.now() + "_" + imageFile.name);
+        await storageRef.put(imageFile);
+        imageUrl = await storageRef.getDownloadURL();
+        console.log("✅ تم رفع الصورة:", imageUrl);
+      } catch(uploadError){
+        console.warn("⚠️ فشل رفع الصورة:", uploadError);
+        // نستمر حتى بدون صورة
+      }
+    }
+
+    // حفظ الطلب في Firestore
+    const orderRef = await db.collection("orders").add({
+      name: name,
+      phone: phone,
+      note: note,
+      products: cart,
+      imageUrl: imageUrl || null,
+      created: new Date(),
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log("✅ تم حفظ الطلب برقم:", orderRef.id);
+
+    loading.style.display = "none";
+    showSuccess("✅ تم إرسال طلبك بنجاح! سيتم التواصل معك قريباً");
+
+    // تفريغ السلة والنموذج
+    localStorage.removeItem("cart");
+    document.getElementById("name").value = "";
+    document.getElementById("phone").value = "";
+    document.getElementById("note").value = "";
+    document.getElementById("image").value = "";
+    renderCart();
+
+    // إعادة تفعيل الزر
+    submitBtn.disabled = false;
+
+  } catch(error){
+    console.error("❌ خطأ في إرسال الطلب:", error);
+    showError("❌ حدث خطأ: " + error.message);
+    
+    const submitBtn = document.getElementById("submitBtn");
+    const loading = document.getElementById("loading");
+    submitBtn.disabled = false;
+    loading.style.display = "none";
   }
-
-  let note = document.getElementById("note").value.trim();
-
-  let name = prompt("ادخل اسمك");
-  let phone = prompt("ادخل رقم التواصل");
-
-  if(!name || !phone){
-    alert("يرجى إدخال الاسم ورقم الهاتف");
-    return;
-  }
-
-  // حفظ الطلب في Firestore
-  await db.collection("orders").add({
-    name: name,
-    phone: phone,
-    note: note,
-    products: cart,
-    created: new Date()
-  });
-
-  alert("✅ تم إرسال طلبك بنجاح");
-
-  // تفريغ السلة
-  localStorage.removeItem("cart");
-  renderCart();
 }
 
 renderCart();
@@ -199,7 +333,3 @@ renderCart();
 
 </body>
 </html>
-
-</body>
-</html>
-
