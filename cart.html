@@ -168,6 +168,7 @@ button.main:disabled{
 <button class="main" id="submitBtn" onclick="sendToFirestore()">إرسال الطلب</button>
 </div>
 
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
@@ -268,6 +269,7 @@ async function sendToFirestore(){
       return;
     }
 
+    // تفعيل حالة التحميل
     const submitBtn = document.getElementById("submitBtn");
     const loading = document.getElementById("loading");
     submitBtn.disabled = true;
@@ -275,16 +277,20 @@ async function sendToFirestore(){
 
     let imageUrl = null;
 
+    // رفع الصورة إلى Storage إذا كانت موجودة
     if(imageFile){
       try{
         const storageRef = storage.ref("orders/" + Date.now() + "_" + imageFile.name);
         await storageRef.put(imageFile);
         imageUrl = await storageRef.getDownloadURL();
+        console.log("✅ تم رفع الصورة:", imageUrl);
       } catch(uploadError){
         console.warn("⚠️ فشل رفع الصورة:", uploadError);
+        // نستمر حتى بدون صورة
       }
     }
 
+    // حفظ الطلب في Firestore
     const orderRef = await db.collection("orders").add({
       name: name,
       phone: phone,
@@ -295,9 +301,12 @@ async function sendToFirestore(){
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
+    console.log("✅ تم حفظ الطلب برقم:", orderRef.id);
+
     loading.style.display = "none";
     showSuccess("✅ تم إرسال طلبك بنجاح! سيتم التواصل معك قريباً");
 
+    // تفريغ السلة والنموذج
     localStorage.removeItem("cart");
     document.getElementById("name").value = "";
     document.getElementById("phone").value = "";
@@ -305,6 +314,7 @@ async function sendToFirestore(){
     document.getElementById("image").value = "";
     renderCart();
 
+    // إعادة تفعيل الزر
     submitBtn.disabled = false;
 
   } catch(error){
