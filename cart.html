@@ -607,11 +607,228 @@ function showError(msg){
 
 function showSuccess(msg){
   const s = document.getElementById("success");
-  s.innerText = msg;
-  s.style.display = "block";
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>سلة الطلب</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  font-family:Cairo;
+  background:#f9f7f4;
+  padding:20px
 }
 
-// تحقق رقم عماني
+.container{
+  max-width:500px;
+  margin:auto;
+  background:white;
+  padding:20px;
+  border-radius:12px
+}
+
+.item{
+  display:flex;
+  gap:10px;
+  margin-bottom:12px;
+  align-items:center;
+  border-bottom:1px solid #eee;
+  padding-bottom:10px
+}
+
+.item img{
+  width:60px;
+  height:60px;
+  border-radius:8px;
+  object-fit:cover
+}
+
+.item-info{
+  flex:1
+}
+
+.remove{
+  background:#8b263e;
+  color:white;
+  border:none;
+  border-radius:50%;
+  width:28px;
+  height:28px;
+  cursor:pointer;
+  font-size:14px
+}
+
+button.main{
+  background:#8b263e;
+  color:white;
+  border:none;
+  padding:10px;
+  border-radius:8px;
+  cursor:pointer;
+  width:100%;
+  margin-top:15px;
+  font-size:16px;
+}
+
+button.main:disabled{
+  background:#ccc;
+  cursor:not-allowed;
+}
+
+#total{
+  font-weight:bold;
+  text-align:center;
+  margin-top:15px
+}
+
+.loading{
+  display:none;
+  text-align:center;
+  color:#8b263e;
+  margin-top:10px;
+}
+
+.error{
+  background:#fee;
+  color:#c00;
+  padding:10px;
+  border-radius:8px;
+  margin-top:10px;
+  display:none;
+}
+
+.success{
+  background:#efe;
+  color:#060;
+  padding:10px;
+  border-radius:8px;
+  margin-top:10px;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2 style="text-align:center">سلة الطلب</h2>
+
+  <div id="items"></div>
+  <p id="total"></p>
+
+<label style="font-weight:bold;margin-top:15px;display:block">
+  الاسم:
+</label>
+<input type="text" id="name"
+  placeholder="أدخل اسمك"
+  style="width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;margin-top:5px;box-sizing:border-box;">
+
+<label style="font-weight:bold;margin-top:15px;display:block">
+  رقم التواصل:
+</label>
+<input type="tel" id="phone"
+  placeholder="مثال: 91234567"
+  maxlength="8"
+  oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+  style="width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;margin-top:5px;box-sizing:border-box;">
+
+<label style="font-weight:bold;margin-top:15px;display:block">
+  تعليق أو طلب خاص:
+</label>
+<textarea id="note"
+  placeholder="مثال: لون مختلف، تغليف هدية، موعد توصيل..."
+  style="width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;margin-top:5px;resize:vertical;box-sizing:border-box;"></textarea>
+
+<label style="font-weight:bold;margin-top:15px;display:block">
+  إرفاق صورة (اختياري):
+</label>
+<input type="file" id="image" accept="image/*" style="margin-top:5px">
+
+<div class="error" id="error"></div>
+<div class="success" id="success"></div>
+<div class="loading" id="loading">جاري إرسال الطلب... ⏳</div>
+
+<button class="main" id="submitBtn" onclick="sendToFirestore()">إرسال الطلب</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAKrYrlNkIJioq3Eh5G6A4ZzHpgTZW1wn4",
+  authDomain: "hatbah-orders.firebaseapp.com",
+  projectId: "hatbah-orders",
+  storageBucket: "hatbah-orders.appspot.com",
+  messagingSenderId: "660907871957",
+  appId: "1:660907871957:web:ef500ea318d495c9f11c5c"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+</script>
+
+<script>
+let sending = false;
+
+function renderCart(){
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let div = document.getElementById("items");
+  let total = 0;
+
+  div.innerHTML = "";
+
+  if(cart.length === 0){
+    div.innerHTML = "<p style='text-align:center'>السلة فارغة</p>";
+    document.getElementById("total").innerText = "";
+    return;
+  }
+
+  cart.forEach((i,index)=>{
+    total += i.price;
+    div.innerHTML += `
+      <div class="item">
+        <img src="${i.image}">
+        <div class="item-info">
+          <strong>${i.name}</strong><br>
+          ${i.price} ر.ع
+        </div>
+        <button class="remove" onclick="removeItem(${index})">✖</button>
+      </div>
+    `;
+  });
+
+  document.getElementById("total").innerText =
+    "الإجمالي: " + total + " ر.ع";
+}
+
+function removeItem(index){
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  cart.splice(index,1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
+
+function showError(message){
+  const errorDiv = document.getElementById("error");
+  errorDiv.innerText = message;
+  errorDiv.style.display = "block";
+  setTimeout(() => {
+    errorDiv.style.display = "none";
+  }, 4000);
+}
+
+function showSuccess(message){
+  const successDiv = document.getElementById("success");
+  successDiv.innerText = message;
+  successDiv.style.display = "block";
+}
+
+// تحقق رقم عماني محلي صحيح
 function isValidOmanPhone(phone){
   return /^9\d{7}$/.test(phone);
 }
@@ -623,7 +840,7 @@ async function sendToFirestore(){
   try{
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
     if(cart.length === 0){
-      showError("السلة فارغة");
+      showError("❌ السلة فارغة");
       sending=false;
       return;
     }
@@ -634,13 +851,13 @@ async function sendToFirestore(){
     let imageFile = document.getElementById("image").files[0];
 
     if(!name){
-      showError("أدخل الاسم");
+      showError("❌ يرجى إدخال الاسم");
       sending=false;
       return;
     }
 
     if(!phone || !isValidOmanPhone(phone)){
-      showError("رقم هاتف غير صحيح");
+      showError("❌ أدخل رقم هاتف عُماني صحيح (8 أرقام يبدأ بـ 9)");
       sending=false;
       return;
     }
@@ -651,10 +868,11 @@ async function sendToFirestore(){
     loading.style.display = "block";
 
     let imageUrl = null;
+
     if(imageFile){
-      const ref = storage.ref("orders/"+Date.now()+"_"+imageFile.name);
-      await ref.put(imageFile);
-      imageUrl = await ref.getDownloadURL();
+      const storageRef = storage.ref("orders/" + Date.now() + "_" + imageFile.name);
+      await storageRef.put(imageFile);
+      imageUrl = await storageRef.getDownloadURL();
     }
 
     let orderNumber = "H-" + Date.now();
@@ -662,34 +880,34 @@ async function sendToFirestore(){
     await db.collection("orders").add({
       orderNumber,
       name,
-      phone:"+968"+phone,
+      phone,
       note,
-      products:cart,
+      products: cart,
       imageUrl,
-      created:new Date(),
-      timestamp:firebase.firestore.FieldValue.serverTimestamp()
+      created: new Date(),
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    loading.style.display="none";
-    showSuccess("تم إرسال طلبك بنجاح ✅ رقم الطلب: "+orderNumber);
+    loading.style.display = "none";
+    showSuccess("✅ تم إرسال طلبك بنجاح — رقم الطلب: " + orderNumber);
 
     localStorage.removeItem("cart");
-    document.getElementById("name").value="";
-    document.getElementById("phone").value="";
-    document.getElementById("note").value="";
-    document.getElementById("image").value="";
+    document.getElementById("name").value = "";
+    document.getElementById("phone").value = "";
+    document.getElementById("note").value = "";
+    document.getElementById("image").value = "";
 
     renderCart();
-    submitBtn.disabled=false;
+    submitBtn.disabled = false;
 
-  }catch(e){
-    console.error(e);
-    showError("حدث خطأ أثناء الإرسال");
-    submitBtn.disabled=false;
-    loading.style.display="none";
+  } catch(error){
+    console.error("❌ خطأ:", error);
+    showError("❌ حدث خطأ أثناء إرسال الطلب");
+    submitBtn.disabled = false;
+    loading.style.display = "none";
   }
 
-  sending=false;
+  sending = false;
 }
 
 renderCart();
